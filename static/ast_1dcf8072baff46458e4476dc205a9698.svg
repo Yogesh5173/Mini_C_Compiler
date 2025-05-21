@@ -1,0 +1,13 @@
+digraph {
+	"a44e5f31-19b7-469b-9e7a-1a0727114333" [label="Program\nNone"]
+	"ac1e4d93-87c4-4a29-b6c4-7172f26da51e" [label="Function\nmain"]
+	"a44e5f31-19b7-469b-9e7a-1a0727114333" -> "ac1e4d93-87c4-4a29-b6c4-7172f26da51e"
+	"e15b34d4-ae61-4b7f-b377-e9b8ff33835c" [label="Block\nNone"]
+	"ac1e4d93-87c4-4a29-b6c4-7172f26da51e" -> "e15b34d4-ae61-4b7f-b377-e9b8ff33835c"
+	"7fecc3f0-2d57-42d0-9f4a-e04d5e0fb79c" [label="Declaration\nint a"]
+	"e15b34d4-ae61-4b7f-b377-e9b8ff33835c" -> "7fecc3f0-2d57-42d0-9f4a-e04d5e0fb79c"
+	"fd5e47f7-a049-40ee-9960-d7eeb8b018a6" [label="Declaration\nint b"]
+	"e15b34d4-ae61-4b7f-b377-e9b8ff33835c" -> "fd5e47f7-a049-40ee-9960-d7eeb8b018a6"
+	"a226cd57-361e-4779-8ddf-266e7d4f930c" [label="Return\n0"]
+	"e15b34d4-ae61-4b7f-b377-e9b8ff33835c" -> "a226cd57-361e-4779-8ddf-266e7d4f930c"
+}

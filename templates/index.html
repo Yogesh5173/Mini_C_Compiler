@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title>Mini C Compiler Playground</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Fira Code', monospace;
+      background: #0f111a;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .editor-pane, .output-pane {
+      flex: 1;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .editor-pane {
+      background: #1c1f2b;
+      border-right: 2px solid #2c2f3c;
+    }
+
+    .output-pane {
+      background: #12131a;
+    }
+
+    h2 {
+      color: #00ffe0;
+      font-weight: 600;
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 60vh;
+      background-color: #0f111a;
+      color: #00f7ff;
+      border: 1px solid #333;
+      padding: 12px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      border-radius: 6px;
+      resize: vertical;
+      box-shadow: 0 0 5px #00f7ff44 inset;
+      transition: 0.2s ease-in-out;
+    }
+
+    textarea:focus {
+      outline: none;
+      box-shadow: 0 0 10px #00ffe080, 0 0 10px #00ffe055 inset;
+    }
+
+    button {
+      background: linear-gradient(145deg, #00ffe0, #0096ff);
+      color: #0f111a;
+      font-weight: 600;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 0 10px #00ffe088;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ffe0aa;
+    }
+
+    #fileInput {
+      margin-top: 15px;
+      padding: 8px;
+      border-radius: 5px;
+      background: #1f222e;
+      color: #ccc;
+      border: 1px solid #444;
+      width: 100%;
+    }
+
+    #output-tabs {
+      display: flex;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .tab {
+      background: #1f222e;
+      padding: 8px 14px;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease;
+      color: #bbb;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      background: #12131a;
+      color: #00ffe0;
+      border-bottom: 2px solid #00ffe0;
+    }
+
+    .output-content {
+      background: #1a1b22;
+      border: 1px solid #00ffe033;
+      padding: 15px;
+      border-radius: 0 0 8px 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      height: 60vh;
+      overflow-y: auto;
+      box-shadow: inset 0 0 6px #00ffe020;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #00ffe044;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00ffe077;
+    }
+
+    /* jstree override for dark mode */
+    .jstree-default .jstree-anchor {
+      color: #00ffe0 !important;
+    }
+  </style>
+
+</head>
+<body>
+
+<div class="editor-pane">
+  <h2>C Code</h2>
+  <textarea id="code">// Example C Code
+int main() {
+    int a;
+    int b;
+    return 0;
+}</textarea>
+  <br>
+  <input type="file" id="fileInput" />
+  <br>
+  <button onclick="analyzeCode()">Analyze</button>
+</div>
+
+<div class="output-pane">
+  <div id="output-tabs">
+    <div class="tab active" data-tab="ast" onclick="switchTab('ast')">AST</div>
+    <div class="tab" data-tab="ir" onclick="switchTab('ir')">IR</div>
+  </div>
+
+  <div id="ast-output" class="output-content">
+    <div id="ast-tree"></div>
+  </div>
+
+  <div id="ir-output" class="output-content" style="display: none;">
+    <pre id="ir-text" style="margin: 0;"></pre>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/clike/clike.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script>
+  const editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+    lineNumbers: true,
+    mode: 'text/x-csrc'
+  });
+
+  document.getElementById('fileInput').addEventListener('change', function() {
+    const reader = new FileReader();
+    reader.onload = () => editor.setValue(reader.result);
+    reader.readAsText(this.files[0]);
+  });
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+    document.getElementById('ast-output').style.display = (tabName === 'ast') ? 'block' : 'none';
+    document.getElementById('ir-output').style.display = (tabName === 'ir') ? 'block' : 'none';
+  }
+
+  function analyzeCode() {
+    const code = editor.getValue();
+
+    fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+
+      // Render AST
+      const astTree = $('#ast-tree');
+      astTree.jstree('destroy').empty();
+      astTree.jstree({
+        'core': {
+          'data': [data.ast],
+          'themes': { 'dots': true, 'icons': false }
+        },
+        'plugins': ['wholerow']
+      });
+
+      // Render IR
+      if (Array.isArray(data.ir)) {
+        document.getElementById('ir-text').textContent = data.ir.join('\n');
+      } else {
+        document.getElementById('ir-output').textContent = 'No IR generated or received.';
+      }
+
+    })
+    .catch(err => {
+      alert('Server error: ' + err.message);
+    });
+  }
+</script>
+</body>
+</html>
